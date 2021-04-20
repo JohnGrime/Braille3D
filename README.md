@@ -19,7 +19,7 @@ Output: a Wavefront .obj file of the converted text.
 If optional "dumb" parameter is specified, uses dumb internal translator. WARNING: Only for emergencies!
 ```
 
-Please note the warning carefully; the use of the internal translator is *strongly* discouraged. This functionality is highly incomplete and is for emergency use only. However, this aspect of the system may be expanded in future to provide better translation without requiring external dependencies. At this point, the default processing mode (which calls into the [Liblouis](http://liblouis.org/) library) should be used.
+Please note the warning carefully; the use of the internal translator is *strongly* discouraged. This functionality is highly incomplete and is for emergency use only. For example, it does not handle punctuation and implements only a very limited number of Braille contractions, short words, etc. However, this aspect of the system may be expanded in future to provide better translation without requiring external dependencies. At this point, the default processing mode (which calls into the [Liblouis](http://liblouis.org/) library) should be used.
 
 ### Example
 

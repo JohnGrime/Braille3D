@@ -34,7 +34,7 @@
 #
 # Should be easy to extend if needed.
 #
-def get_conversion_maps():
+def get_conversion_maps() -> ( {str: str}, {str: str} ):
 	dots2unicode = {} # dot representation to unicode
 	unicode2dots = {} # unicode to dot representation
 
