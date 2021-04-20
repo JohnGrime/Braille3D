@@ -26,7 +26,7 @@ Please note the warning carefully; the use of the internal translator is *strong
 To generate a 3D model of the text `This is a test` in [Wavefront .obj](https://en.wikipedia.org/wiki/Wavefront_.obj_file) format:
 
 ```
-$ python3 python3 braille.py "This is a test" > test.obj
+$ python3 braille.py "This is a test" > test.obj
 ```
 
 The first line of the output file describes the conversion the script performed:
