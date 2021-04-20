@@ -47,9 +47,8 @@ class FSM:
 	"""
 
 	def __init__(self):
-		# Check REFERENCE equivalence via "is" rather than VALUE equivalence;
-		# this approach does not restrict the potential input tokens we can use.
-		self.end = 'value irrelevant; equivalence test by reference, not value'
+		# Actual value irrelevant; detect via REFERENCE not VALUE
+		self.end = '|'
 
 		self.states = {}
 		self.start_state = None
@@ -237,6 +236,7 @@ class BrailleFSM(FSM):
 	mixed_tag       = 'mixed_str'  # both upper & lower case letters,
 	alphanum_tag    = 'alphanum'   # upper/lower case letters & digits,
 	number_tag      = 'number'     # can be interpreted as a number.
+	punctuation_tag = 'punctuation'
 
 
 class BrailleTokeniser(BrailleFSM):
@@ -261,7 +261,8 @@ class BrailleTokeniser(BrailleFSM):
 		lower = 'abcdefghijklmnopqrstuvwxyz'
 		upper = lower.upper()
 		digit  = '0123456789'
-		white = '\t ' # whitespace characters
+		white = '\t '  # whitespace characters
+		punct = ',.;:' # punctuation characters
 		
 		w_tag = self.whitespace_tag
 		u_tag = self.upper_tag
@@ -269,6 +270,17 @@ class BrailleTokeniser(BrailleFSM):
 		m_tag = self.mixed_tag
 		a_tag = self.alphanum_tag
 		n_tag = self.number_tag
+		p_tag = self.punctuation_tag
+
+		# Transitions for "punctuation" state
+		self.add_state( p_tag,
+			[
+			{k: ([], [k], p_tag) for k in punct},
+			{k: ([], [self.end,k], l_tag) for k in lower},
+			{k: ([], [self.end,k], u_tag) for k in upper},
+			{k: ([], [self.end,k], n_tag) for k in digit},
+			{k: ([], [self.end,k], w_tag) for k in white},
+			])
 
 		# Transitions for "whitespace" state
 		self.add_state( w_tag,
@@ -277,6 +289,7 @@ class BrailleTokeniser(BrailleFSM):
 			{k: ([], [self.end,k], u_tag) for k in upper},
 			{k: ([], [self.end,k], n_tag) for k in digit},
 			{k: ([], [self.end,k], w_tag) for k in white},
+			{k: ([], [self.end,k], p_tag) for k in punct},
 			])
 
 		# Transitions for "lower case sequence" state
@@ -286,6 +299,7 @@ class BrailleTokeniser(BrailleFSM):
 			{k: ([], [k],          m_tag) for k in upper},
 			{k: ([], [k],          a_tag) for k in digit},
 			{k: ([], [self.end,k], w_tag) for k in white},
+			{k: ([], [self.end,k], p_tag) for k in punct},
 			])
 
 		# Transitions for "upper case sequence" statr
@@ -295,6 +309,7 @@ class BrailleTokeniser(BrailleFSM):
 			{k: ([], [k],          u_tag) for k in upper},
 			{k: ([], [k],          a_tag) for k in digit},
 			{k: ([], [self.end,k], w_tag) for k in white},
+			{k: ([], [self.end,k], p_tag) for k in punct},
 			])
 
 		# Transitions for "mixed case sequence" state; could simply merge this
@@ -306,6 +321,7 @@ class BrailleTokeniser(BrailleFSM):
 			{k: ([], [k],          m_tag) for k in lower+upper},
 			{k: ([], [k],          a_tag) for k in digit},
 			{k: ([], [self.end,k], w_tag) for k in white},
+			{k: ([], [self.end,k], p_tag) for k in punct},
 			])
 
 		# Transitions for "alphanumeric" state; upper/lower case characters
@@ -314,15 +330,17 @@ class BrailleTokeniser(BrailleFSM):
 			[
 			{k: ([], [k],          a_tag) for k in lower+upper+digit},
 			{k: ([], [self.end,k], w_tag) for k in white},
+			{k: ([], [self.end,k], p_tag) for k in punct},
 			])
 
 		# Transitions for "number" state; numbers keep us in, anything else
-		# bumps us out. EXTREMELY crude! Cant handle e.g. decimals etc!
+		# bumps us out. EXTREMELY crude! Doesn't properly handle e.g. decimal place!
 		self.add_state( n_tag,
 			[
 			{k: ([], [k],          a_tag) for k in lower+upper},
 			{k: ([], [k],          n_tag) for k in digit},
 			{k: ([], [self.end,k], w_tag) for k in white},
+			{k: ([], [self.end,k], p_tag) for k in punct},
 			])
 
 		self.start_state = w_tag
