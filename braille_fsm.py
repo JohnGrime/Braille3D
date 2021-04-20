@@ -27,7 +27,10 @@ class FSM:
 	"""
 
 	def __init__(self):
-		self.end = '' # output token terminator code; internal use only. Swap to comparison as 'x is self,end' so actual text value irrelevant?
+		# Check REFERENCE equivalence via "is" rather than VALUE equivalence;
+		# this approach does not restrict the potential input tokens we can use.
+		self.end = 'value irrelevant; equivalence test by reference, not value'
+
 		self.states = {}
 		self.start_state = None
 		self.setup()
@@ -109,7 +112,7 @@ class FSM:
 			# We call the user-specified postprocess() routine here for any
 			# final modification of the output text.
 			for txt in out_:
-				if txt == self.end:
+				if txt is self.end: # Check same REFERENCE, not same value!
 					out_seq = out_seq + self.postprocess(out_txt,tag,state)
 					out_txt = None
 				else:
@@ -240,8 +243,6 @@ class BrailleTokeniser(BrailleFSM):
 		digit  = '0123456789'
 		white = '\t ' # whitespace characters
 		
-		end = '|'     # token terminator, for internal use only
-
 		w_tag = self.whitespace_tag
 		u_tag = self.upper_tag
 		l_tag = self.lower_tag
@@ -252,28 +253,28 @@ class BrailleTokeniser(BrailleFSM):
 		# Transitions for "whitespace" state
 		self.add_state( w_tag,
 			[
-			{k: ([], [end,k], l_tag) for k in lower},
-			{k: ([], [end,k], u_tag) for k in upper},
-			{k: ([], [end,k], n_tag) for k in digit},
-			{k: ([], [end,k], w_tag) for k in white},
+			{k: ([], [self.end,k], l_tag) for k in lower},
+			{k: ([], [self.end,k], u_tag) for k in upper},
+			{k: ([], [self.end,k], n_tag) for k in digit},
+			{k: ([], [self.end,k], w_tag) for k in white},
 			])
 
 		# Transitions for "lower case sequence" state
 		self.add_state( l_tag,
 			[
-			{k: ([], [k],     l_tag) for k in lower},
-			{k: ([], [k],     m_tag) for k in upper},
-			{k: ([], [k],     a_tag) for k in digit},
-			{k: ([], [end,k], w_tag) for k in white},
+			{k: ([], [k],          l_tag) for k in lower},
+			{k: ([], [k],          m_tag) for k in upper},
+			{k: ([], [k],          a_tag) for k in digit},
+			{k: ([], [self.end,k], w_tag) for k in white},
 			])
 
 		# Transitions for "upper case sequence" statr
 		self.add_state( u_tag,
 			[
-			{k: ([], [k],     m_tag) for k in lower},
-			{k: ([], [k],     u_tag) for k in upper},
-			{k: ([], [k],     a_tag) for k in digit},
-			{k: ([], [end,k], w_tag) for k in white},
+			{k: ([], [k],          m_tag) for k in lower},
+			{k: ([], [k],          u_tag) for k in upper},
+			{k: ([], [k],          a_tag) for k in digit},
+			{k: ([], [self.end,k], w_tag) for k in white},
 			])
 
 		# Transitions for "mixed case sequence" state; could simply merge this
@@ -282,30 +283,29 @@ class BrailleTokeniser(BrailleFSM):
 		# a sequence that contains no digits, only upper/lower case letters).
 		self.add_state( m_tag,
 			[
-			{k: ([], [k],     m_tag) for k in lower+upper},
-			{k: ([], [k],     a_tag) for k in digit},
-			{k: ([], [end,k], w_tag) for k in white},
+			{k: ([], [k],          m_tag) for k in lower+upper},
+			{k: ([], [k],          a_tag) for k in digit},
+			{k: ([], [self.end,k], w_tag) for k in white},
 			])
 
 		# Transitions for "alphanumeric" state; upper/lower case characters
 		# and digits keep us in alphanumeric state, whitespace bumps us out.
 		self.add_state( a_tag,
 			[
-			{k: ([], [k],     a_tag) for k in lower+upper+digit},
-			{k: ([], [end,k], w_tag) for k in white},
+			{k: ([], [k],          a_tag) for k in lower+upper+digit},
+			{k: ([], [self.end,k], w_tag) for k in white},
 			])
 
 		# Transitions for "number" state; numbers keep us in, anything else
 		# bumps us out. EXTREMELY crude! Cant handle e.g. decimals etc!
 		self.add_state( n_tag,
 			[
-			{k: ([], [k],     a_tag) for k in lower+upper},
-			{k: ([], [k],     n_tag) for k in digit},
-			{k: ([], [end,k], w_tag) for k in white},
+			{k: ([], [k],          a_tag) for k in lower+upper},
+			{k: ([], [k],          n_tag) for k in digit},
+			{k: ([], [self.end,k], w_tag) for k in white},
 			])
 
 		self.start_state = w_tag
-		self.end = end
 
 
 class BrailleTranslator(BrailleFSM):
